@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Low Stock Report{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-exclamation-triangle"></i> Low Stock Medicines</h2>
+    <a href="{{ url_for('reports.reports_dashboard') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Back
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        {% if medicines %}
+        <div class="alert alert-warning">
+            <i class="bi bi-exclamation-triangle"></i>
+            <strong>{{ medicines|length }} medicine(s)</strong> are at or below their low stock threshold.
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Medicine</th>
+                        <th>Strength</th>
+                        <th>Form</th>
+                        <th>Available Stock</th>
+                        <th>Threshold</th>
+                        <th>Suppliers</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for med in medicines %}
+                    <tr class="{% if med.available_stock == 0 %}table-danger{% else %}table-warning{% endif %}">
+                        <td><strong>{{ med.name }}</strong></td>
+                        <td>{{ med.strength }}</td>
+                        <td>{{ med.dosage_form }}</td>
+                        <td>
+                            {% if med.available_stock == 0 %}
+                                <span class="badge bg-danger">Out of Stock</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark">{{ med.available_stock }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ med.low_stock_threshold }}</td>
+                        <td>{{ med.supplier_names or 'No suppliers linked' }}</td>
+                        <td>
+                            <a href="{{ url_for('medicines.view_medicine', medicine_id=med.medicine_id) }}"
+                               class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-eye"></i> View
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-check-circle display-4 text-success"></i>
+            <p class="text-muted mt-2">All medicines are well stocked!</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

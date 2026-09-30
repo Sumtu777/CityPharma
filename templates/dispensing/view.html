@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}Dispensing Record{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+
+        <!-- Receipt-style Card -->
+        <div class="card">
+            <div class="card-header bg-success text-white text-center">
+                <h4 class="mb-0"><i class="bi bi-check-circle"></i> Dispensing Complete</h4>
+            </div>
+            <div class="card-body">
+
+                <!-- Receipt Header -->
+                <div class="text-center mb-4">
+                    <h3>CityPharma</h3>
+                    <p class="text-muted">Pharmacy Management System</p>
+                    <hr>
+                    <h5>
+                        <span class="badge bg-primary fs-6">
+                            Receipt: {{ record.receipt_reference }}
+                        </span>
+                    </h5>
+                </div>
+
+                <div class="row">
+                    <!-- Patient & Doctor Info -->
+                    <div class="col-md-6 mb-3">
+                        <h6 class="text-primary"><i class="bi bi-person"></i> Patient</h6>
+                        <p class="mb-1"><strong>{{ record.patient_name }}</strong></p>
+                        {% if record.patient_dob %}
+                            <p class="mb-1 text-muted">DOB: {{ record.patient_dob.strftime('%d/%m/%Y') }}</p>
+                        {% endif %}
+                        {% if record.patient_address %}
+                            <p class="mb-1 text-muted">{{ record.patient_address }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <h6 class="text-primary"><i class="bi bi-heart-pulse"></i> Doctor</h6>
+                        <p class="mb-1"><strong>Dr. {{ record.doctor_name }}</strong></p>
+                        {% if record.doctor_registration %}
+                            <p class="mb-1 text-muted">GMC: {{ record.doctor_registration }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <hr>
+
+                <!-- Dispensed Items -->
+                <h5 class="mb-3"><i class="bi bi-capsule"></i> Dispensed Medicines</h5>
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Medicine</th>
+                                <th>Qty Dispensed</th>
+                                <th>Batch</th>
+                                <th>Expiry Date</th>
+                                <th>Dosage Instructions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in dispensed_items %}
+                            <tr>
+                                <td>
+                                    <strong>{{ item.medicine_name }}</strong><br>
+                                    <small class="text-muted">{{ item.strength }} {{ item.dosage_form }}</small>
+                                </td>
+                                <td>{{ item.quantity_dispensed }}</td>
+                                <td>{{ item.batch_number }}</td>
+                                <td>{{ item.expiry_date.strftime('%d/%m/%Y') }}</td>
+                                <td>{{ item.dosage_instructions or 'N/A' }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <hr>
+
+                <!-- Payment Info -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5><i class="bi bi-credit-card"></i> Payment</h5>
+                        <p><strong>Method:</strong>
+                            {% if record.payment_method == 'cash' %}
+                                <i class="bi bi-cash"></i> Cash
+                            {% elif record.payment_method == 'card' %}
+                                <i class="bi bi-credit-card"></i> Card
+                            {% else %}
+                                <i class="bi bi-wifi"></i> Contactless
+                            {% endif %}
+                        </p>
+                        <p><strong>Amount:</strong> <span class="fs-5">£{{ "%.2f"|format(record.amount) }}</span></p>
+                        <p><strong>Receipt Reference:</strong> {{ record.receipt_reference }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h5><i class="bi bi-info-circle"></i> Record Info</h5>
+                        <p><strong>Prescription:</strong> RX-{{ "%05d"|format(record.prescription_id) }}</p>
+                        <p><strong>Dispensed By:</strong> {{ record.dispensed_by_name }}</p>
+                        <p><strong>Date/Time:</strong> {{ record.dispensing_date.strftime('%d/%m/%Y %H:%M') }}</p>
+                    </div>
+                </div>
+
+                <hr>
+
+                <div class="d-flex justify-content-between">
+                    <a href="{{ url_for('dispensing.dispensing_history') }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Dispensing History
+                    </a>
+                    <a href="{{ url_for('prescriptions.list_prescriptions') }}" class="btn btn-outline-primary">
+                        <i class="bi bi-file-medical"></i> Prescriptions
+                    </a>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

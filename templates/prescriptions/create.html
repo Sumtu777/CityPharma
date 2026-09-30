@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}New Prescription{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0"><i class="bi bi-file-medical"></i> Create New Prescription</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('prescriptions.create_prescription') }}">
+                    <!-- Patient Details Section -->
+                    <h5 class="mb-3 text-primary"><i class="bi bi-person"></i> Patient Details</h5>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="patient_name" class="form-label">
+                                Patient Name <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" class="form-control" id="patient_name" name="patient_name"
+                                   placeholder="e.g., Jane Doe" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="patient_dob" class="form-label">Date of Birth</label>
+                            <input type="date" class="form-control" id="patient_dob" name="patient_dob">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="patient_address" class="form-label">Patient Address</label>
+                        <textarea class="form-control" id="patient_address" name="patient_address"
+                                  rows="2" placeholder="Patient's home address..."></textarea>
+                    </div>
+
+                    <hr>
+
+                    <!-- Doctor Details Section -->
+                    <h5 class="mb-3 text-primary"><i class="bi bi-heart-pulse"></i> Doctor Details</h5>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="doctor_name" class="form-label">
+                                Doctor Name <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" class="form-control" id="doctor_name" name="doctor_name"
+                                   placeholder="e.g., Dr. Smith" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="doctor_registration" class="form-label">GMC Registration Number</label>
+                            <input type="text" class="form-control" id="doctor_registration"
+                                   name="doctor_registration" placeholder="e.g., 7654321">
+                            <small class="text-muted">General Medical Council registration number</small>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <!-- Notes -->
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Notes</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="2"
+                                  placeholder="Any additional notes..."></textarea>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('prescriptions.list_prescriptions') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> Create Prescription
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

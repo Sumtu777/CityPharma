@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Users{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-people"></i> User Management</h2>
+    <a href="{{ url_for('users.add_user') }}" class="btn btn-primary">
+        <i class="bi bi-person-plus"></i> Add User
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        {% if users %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Name</th>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                        <th>Last Activity</th>
+                        <th>Manage</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr class="{% if not user.is_active %}table-secondary{% endif %}">
+                        <td><strong>{{ user.full_name }}</strong></td>
+                        <td>{{ user.username }}</td>
+                        <td>{{ user.email }}</td>
+                        <td>
+                            {% if user.role == 'manager' %}
+                                <span class="badge bg-warning text-dark">Manager</span>
+                            {% else %}
+                                <span class="badge bg-info">Staff</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if user.is_active %}
+                                <span class="badge bg-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-danger">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ user.action_count }}</td>
+                        <td>
+                            {% if user.last_activity %}
+                                {{ user.last_activity.strftime('%d/%m/%Y %H:%M') }}
+                            {% else %}
+                                Never
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if user.user_id != session.get('user_id') %}
+                                <form method="POST"
+                                      action="{{ url_for('users.toggle_user', user_id=user.user_id) }}"
+                                      style="display:inline;"
+                                      onsubmit="return confirm('{{ 'Deactivate' if user.is_active else 'Activate' }} this user?');">
+                                    {% if user.is_active %}
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-person-x"></i> Deactivate
+                                        </button>
+                                    {% else %}
+                                        <button type="submit" class="btn btn-sm btn-outline-success">
+                                            <i class="bi bi-person-check"></i> Activate
+                                        </button>
+                                    {% endif %}
+                                </form>
+                            {% else %}
+                                <span class="text-muted">Current user</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted text-center py-4">No users found.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

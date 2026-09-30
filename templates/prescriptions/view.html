@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+
+{% block title %}Prescription RX-{{ "%05d"|format(prescription.prescription_id) }}{% endblock %}
+
+{% block content %}
+<!-- Prescription Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2><i class="bi bi-file-medical"></i> RX-{{ "%05d"|format(prescription.prescription_id) }}</h2>
+        <p class="text-muted mb-0">
+            Patient: {{ prescription.patient_name }} | Doctor: Dr. {{ prescription.doctor_name }}
+        </p>
+    </div>
+    <div>
+        {% if prescription.status == 'created' and items %}
+            {% if can_dispense %}
+                <a href="{{ url_for('dispensing.dispense_prescription', prescription_id=prescription.prescription_id) }}" class="btn btn-success">
+                    <i class="bi bi-prescription2"></i> Dispense
+                </a>
+            {% else %}
+                <button class="btn btn-success" disabled title="Insufficient stock for one or more items">
+                    <i class="bi bi-prescription2"></i> Dispense
+                </button>
+            {% endif %}
+        {% endif %}
+        {% if prescription.status == 'created' %}
+            <form method="POST"
+                  action="{{ url_for('prescriptions.cancel_prescription', prescription_id=prescription.prescription_id) }}"
+                  style="display:inline;"
+                  onsubmit="return confirm('Are you sure you want to cancel this prescription?');">
+                <button type="submit" class="btn btn-danger">
+                    <i class="bi bi-x-circle"></i> Cancel
+                </button>
+            </form>
+        {% endif %}
+        <a href="{{ url_for('prescriptions.list_prescriptions') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Back
+        </a>
+    </div>
+</div>
+
+<!-- Stock Warnings -->
+{% if dispense_warnings %}
+<div class="alert alert-warning">
+    <i class="bi bi-exclamation-triangle"></i>
+    <strong>Cannot dispense - Insufficient stock:</strong>
+    <ul class="mb-0 mt-1">
+        {% for warning in dispense_warnings %}
+            <li>{{ warning }}</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+<div class="row">
+    <!-- Prescription Details -->
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-header"><h5 class="mb-0">Prescription Details</h5></div>
+            <div class="card-body">
+                <p>
+                    <strong>Status:</strong>
+                    {% if prescription.status == 'dispensed' %}
+                        <span class="badge bg-success">Dispensed</span>
+                    {% elif prescription.status == 'cancelled' %}
+                        <span class="badge bg-danger">Cancelled</span>
+                    {% else %}
+                        <span class="badge bg-warning text-dark">Created</span>
+                    {% endif %}
+                </p>
+                <hr>
+                <h6 class="text-primary"><i class="bi bi-person"></i> Patient</h6>
+                <p><strong>Name:</strong> {{ prescription.patient_name }}</p>
+                <p><strong>DOB:</strong>
+                    {{ prescription.patient_dob.strftime('%d/%m/%Y') if prescription.patient_dob else 'N/A' }}
+                </p>
+                <p><strong>Address:</strong> {{ prescription.patient_address or 'N/A' }}</p>
+                <hr>
+                <h6 class="text-primary"><i class="bi bi-heart-pulse"></i> Doctor</h6>
+                <p><strong>Name:</strong> Dr. {{ prescription.doctor_name }}</p>
+                <p><strong>GMC Reg:</strong> {{ prescription.doctor_registration or 'N/A' }}</p>
+                <hr>
+                <p><strong>Created By:</strong> {{ prescription.created_by_name }}</p>
+                <p><strong>Date:</strong> {{ prescription.prescription_date.strftime('%d/%m/%Y %H:%M') }}</p>
+                {% if prescription.notes %}
+                    <p><strong>Notes:</strong> {{ prescription.notes }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Prescription Items -->
+    <div class="col-md-8 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0">Prescribed Medicines</h5>
+            </div>
+            <div class="card-body">
+                <!-- Add Item Form (only for 'created' status) -->
+                {% if prescription.status == 'created' and available_medicines %}
+                <form method="POST"
+                      action="{{ url_for('prescriptions.add_prescription_item', prescription_id=prescription.prescription_id) }}"
+                      class="p-3 bg-light rounded mb-3">
+                    <div class="row g-2">
+                        <div class="col-md-4">
+                            <select class="form-select" name="medicine_id" required>
+                                <option value="">Select medicine...</option>
+                                {% for med in available_medicines %}
+                                    <option value="{{ med.medicine_id }}">
+                                        {{ med.name }} ({{ med.strength }} {{ med.dosage_form }})
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <input type="number" class="form-control" name="quantity"
+                                   min="1" placeholder="Qty" required>
+                        </div>
+                        <div class="col-md-4">
+                            <input type="text" class="form-control" name="dosage_instructions"
+                                   placeholder="e.g., Take 2 tablets 3x daily">
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-plus"></i> Add
+                            </button>
+                        </div>
+                    </div>
+                </form>
+                {% endif %}
+
+                <!-- Items Table -->
+                {% if items %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Medicine</th>
+                                <th>Strength</th>
+                                <th>Quantity</th>
+                                <th>Unit Price</th>
+                                <th>Available Stock</th>
+                                <th>Dosage Instructions</th>
+                                {% if prescription.status == 'created' %}
+                                    <th>Action</th>
+                                {% endif %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in items %}
+                            <tr>
+                                <td class="fw-bold">{{ item.medicine_name }}</td>
+                                <td>{{ item.strength }} {{ item.dosage_form }}</td>
+                                <td>{{ item.quantity }}</td>
+                                <td>£{{ "%.2f"|format(item.selling_price or 0) }}</td>
+                                <td>
+                                    {% if item.available_stock >= item.quantity %}
+                                        <span class="badge bg-success">{{ item.available_stock }}</span>
+                                    {% elif item.available_stock > 0 %}
+                                        <span class="badge bg-warning text-dark">{{ item.available_stock }} (Low)</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Out of Stock</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ item.dosage_instructions or 'N/A' }}</td>
+                                {% if prescription.status == 'created' %}
+                                    <td>
+                                        <form method="POST"
+                                              action="{{ url_for('prescriptions.remove_prescription_item', item_id=item.item_id) }}"
+                                              style="display:inline;"
+                                              onsubmit="return confirm('Remove this medicine?');">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                {% endif %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <p class="text-muted">No medicines added yet. Use the form above to add medicines to this prescription.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

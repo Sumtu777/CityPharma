@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}Revenue Report{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-graph-up-arrow"></i> Monthly Prescription Revenue</h2>
+    <div>
+        <form method="GET" class="d-inline">
+            <select name="year" class="form-select d-inline-block" style="width:auto;"
+                    onchange="this.form.submit()">
+                {% for year in available_years %}
+                    <option value="{{ year }}" {% if year == selected_year %}selected{% endif %}>{{ year }}</option>
+                {% endfor %}
+            </select>
+        </form>
+        <a href="{{ url_for('reports.reports_dashboard') }}" class="btn btn-outline-secondary ms-2">
+            <i class="bi bi-arrow-left"></i> Back
+        </a>
+    </div>
+</div>
+
+<!-- Yearly Summary -->
+<div class="row g-4 mb-4">
+    <div class="col-md-6">
+        <div class="card border-success">
+            <div class="card-body text-center">
+                <h6 class="text-muted">Total Revenue ({{ selected_year }})</h6>
+                <h2 class="text-success">£{{ "%.2f"|format(yearly_totals.yearly_total) }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card border-primary">
+            <div class="card-body text-center">
+                <h6 class="text-muted">Total Transactions ({{ selected_year }})</h6>
+                <h2 class="text-primary">{{ yearly_totals.yearly_transactions }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Monthly Breakdown -->
+<div class="card mb-4">
+    <div class="card-header"><h5 class="mb-0">Monthly Breakdown</h5></div>
+    <div class="card-body">
+        {% if monthly_data %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Month</th>
+                        <th>Transactions</th>
+                        <th>Cash</th>
+                        <th>Card</th>
+                        <th>Contactless</th>
+                        <th>Total Revenue</th>
+                        <th>Avg Transaction</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for month in monthly_data %}
+                    <tr>
+                        <td><strong>{{ month.month_name }}</strong></td>
+                        <td>{{ month.transaction_count }}</td>
+                        <td>£{{ "%.2f"|format(month.cash_total) }}</td>
+                        <td>£{{ "%.2f"|format(month.card_total) }}</td>
+                        <td>£{{ "%.2f"|format(month.contactless_total) }}</td>
+                        <td class="fw-bold text-success">£{{ "%.2f"|format(month.total_revenue) }}</td>
+                        <td>£{{ "%.2f"|format(month.avg_transaction) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted text-center py-3">No revenue data for {{ selected_year }}.</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Recent Transactions -->
+<div class="card">
+    <div class="card-header"><h5 class="mb-0">Recent Transactions</h5></div>
+    <div class="card-body">
+        {% if recent_transactions %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Receipt</th>
+                        <th>Patient</th>
+                        <th>Date</th>
+                        <th>Method</th>
+                        <th>Amount</th>
+                        <th>Processed By</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tx in recent_transactions %}
+                    <tr>
+                        <td>{{ tx.receipt_reference }}</td>
+                        <td>{{ tx.patient_name }}</td>
+                        <td>{{ tx.payment_date.strftime('%d/%m/%Y %H:%M') }}</td>
+                        <td>
+                            {% if tx.payment_method == 'cash' %}
+                                <span class="badge bg-success">Cash</span>
+                            {% elif tx.payment_method == 'card' %}
+                                <span class="badge bg-primary">Card</span>
+                            {% else %}
+                                <span class="badge bg-info">Contactless</span>
+                            {% endif %}
+                        </td>
+                        <td>£{{ "%.2f"|format(tx.amount) }}</td>
+                        <td>{{ tx.processed_by_name }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted text-center py-3">No transactions found.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

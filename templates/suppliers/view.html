@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+
+{% block title %}{{ supplier.name }}{% endblock %}
+
+{% block content %}
+<!-- Supplier Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2><i class="bi bi-truck"></i> {{ supplier.name }}</h2>
+    </div>
+    <div>
+        <a href="{{ url_for('suppliers.edit_supplier', supplier_id=supplier.supplier_id) }}" class="btn btn-warning">
+            <i class="bi bi-pencil"></i> Edit
+        </a>
+        <a href="{{ url_for('suppliers.list_suppliers') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Back
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Supplier Details -->
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-header"><h5 class="mb-0">Contact Details</h5></div>
+            <div class="card-body">
+                <p><strong>Contact Person:</strong> {{ supplier.contact_person or 'N/A' }}</p>
+                <p><strong>Email:</strong> {{ supplier.email or 'N/A' }}</p>
+                <p><strong>Phone:</strong> {{ supplier.phone or 'N/A' }}</p>
+                <p><strong>Address:</strong> {{ supplier.address or 'N/A' }}</p>
+                <p><strong>Added:</strong> {{ supplier.created_at.strftime('%d/%m/%Y') }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Linked Medicines -->
+    <div class="col-md-8 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0">Linked Medicines</h5>
+            </div>
+            <div class="card-body">
+                <!-- Link Medicine Form -->
+                {% if available_medicines %}
+                <form method="POST"
+                      action="{{ url_for('suppliers.link_medicine', supplier_id=supplier.supplier_id) }}"
+                      class="row g-2 mb-3 p-3 bg-light rounded">
+                    <div class="col-md-5">
+                        <select class="form-select" name="medicine_id" required>
+                            <option value="">Select medicine to link...</option>
+                            {% for med in available_medicines %}
+                                <option value="{{ med.medicine_id }}">
+                                    {{ med.name }} ({{ med.strength }} {{ med.dosage_form }})
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="input-group">
+                            <span class="input-group-text">£</span>
+                            <input type="number" class="form-control" name="unit_cost"
+                                   step="0.01" min="0" placeholder="Unit cost" required>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-link-45deg"></i> Link
+                        </button>
+                    </div>
+                </form>
+                {% endif %}
+
+                <!-- Linked Medicines Table -->
+                {% if linked_medicines %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Medicine</th>
+                                <th>Strength</th>
+                                <th>Form</th>
+                                <th>Unit Cost</th>
+                                <th>Stock</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for med in linked_medicines %}
+                            <tr>
+                                <td>
+                                    <a href="{{ url_for('medicines.view_medicine', medicine_id=med.medicine_id) }}"
+                                       class="text-decoration-none">{{ med.name }}</a>
+                                </td>
+                                <td>{{ med.strength }}</td>
+                                <td>{{ med.dosage_form }}</td>
+                                <td>£{{ "%.2f"|format(med.unit_cost) if med.unit_cost else '0.00' }}</td>
+                                <td>
+                                    {% if med.total_stock <= 0 %}
+                                        <span class="badge bg-danger">Out of Stock</span>
+                                    {% elif med.total_stock <= med.low_stock_threshold %}
+                                        <span class="badge bg-warning text-dark">{{ med.total_stock }}</span>
+                                    {% else %}
+                                        <span class="badge bg-success">{{ med.total_stock }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <form method="POST"
+                                          action="{{ url_for('suppliers.unlink_medicine', medicine_supplier_id=med.medicine_supplier_id) }}"
+                                          style="display:inline;"
+                                          onsubmit="return confirm('Unlink this medicine from the supplier?');">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Unlink">
+                                            <i class="bi bi-x-circle"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted text-center py-3">No medicines linked yet. Use the form above to link medicines.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Purchase Orders -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">Recent Purchase Orders</h5>
+    </div>
+    <div class="card-body">
+        {% if recent_orders %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Order #</th>
+                        <th>Date</th>
+                        <th>Items</th>
+                        <th>Total Cost</th>
+                        <th>Status</th>
+                        <th>Ordered By</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in recent_orders %}
+                    <tr>
+                        <td>PO-{{ "%04d"|format(order.order_id) }}</td>
+                        <td>{{ order.order_date.strftime('%d/%m/%Y') }}</td>
+                        <td>{{ order.item_count }}</td>
+                        <td>£{{ "%.2f"|format(order.total_cost) }}</td>
+                        <td>
+                            {% if order.status == 'received' %}
+                                <span class="badge bg-success">Received</span>
+                            {% elif order.status == 'cancelled' %}
+                                <span class="badge bg-danger">Cancelled</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark">Pending</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ order.ordered_by_name }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted text-center py-3">No purchase orders yet for this supplier.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

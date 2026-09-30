@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}Stock Overview{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-box-seam"></i> Stock Overview</h2>
+</div>
+
+<!-- Filter Buttons -->
+<div class="btn-group mb-4" role="group">
+    <a href="{{ url_for('medicines.stock_overview', filter='all') }}"
+       class="btn {% if current_filter == 'all' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+        All Medicines
+    </a>
+    <a href="{{ url_for('medicines.stock_overview', filter='low') }}"
+       class="btn {% if current_filter == 'low' %}btn-warning{% else %}btn-outline-warning{% endif %}">
+        <i class="bi bi-exclamation-triangle"></i> Low Stock
+    </a>
+    <a href="{{ url_for('medicines.stock_overview', filter='out') }}"
+       class="btn {% if current_filter == 'out' %}btn-danger{% else %}btn-outline-danger{% endif %}">
+        <i class="bi bi-x-circle"></i> Out of Stock
+    </a>
+    <a href="{{ url_for('medicines.stock_overview', filter='expiring') }}"
+       class="btn {% if current_filter == 'expiring' %}btn-info{% else %}btn-outline-info{% endif %}">
+        <i class="bi bi-clock"></i> Expiring Soon
+    </a>
+</div>
+
+<!-- Stock Table -->
+<div class="card">
+    <div class="card-body">
+        {% if medicines %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Medicine</th>
+                        <th>Strength</th>
+                        <th>Form</th>
+                        <th>Available Stock</th>
+                        <th>Expired Stock</th>
+                        <th>Threshold</th>
+                        <th>Nearest Expiry</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for med in medicines %}
+                    <tr>
+                        <td>
+                            <a href="{{ url_for('medicines.view_medicine', medicine_id=med.medicine_id) }}"
+                               class="text-decoration-none fw-bold">{{ med.name }}</a>
+                        </td>
+                        <td>{{ med.strength }}</td>
+                        <td>{{ med.dosage_form }}</td>
+                        <td>{{ med.available_stock }}</td>
+                        <td>
+                            {% if med.expired_stock > 0 %}
+                                <span class="text-danger">{{ med.expired_stock }}</span>
+                            {% else %}
+                                0
+                            {% endif %}
+                        </td>
+                        <td>{{ med.low_stock_threshold }}</td>
+                        <td>
+                            {% if med.nearest_expiry %}
+                                {{ med.nearest_expiry.strftime('%d/%m/%Y') }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if med.available_stock <= 0 %}
+                                <span class="badge bg-danger">Out of Stock</span>
+                            {% elif med.available_stock <= med.low_stock_threshold %}
+                                <span class="badge bg-warning text-dark">Low Stock</span>
+                            {% else %}
+                                <span class="badge bg-success">In Stock</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <p class="text-muted">No medicines found matching this filter.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

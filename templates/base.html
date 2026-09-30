@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CityPharma - {% block title %}Pharmacy Management{% endblock %}</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons - gives us nice icons for buttons and menus -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Our custom CSS file -->
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+</head>
+<body>
+
+    <!-- ============================================ -->
+    <!-- NAVIGATION BAR -->
+    <!-- Only shown when user is logged in -->
+    <!-- The navbar changes based on user role -->
+    <!-- ============================================ -->
+    {% if session.get('user_id') %}
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <!-- Brand/Logo -->
+            <a class="navbar-brand" href="{{ url_for('dashboard') }}">
+                <i class="bi bi-capsule"></i> CityPharma
+            </a>
+
+            <!-- Hamburger menu button for mobile (responsive design) -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <!-- Dashboard link - visible to all -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('dashboard') }}">
+                            <i class="bi bi-speedometer2"></i> Dashboard
+                        </a>
+                    </li>
+
+                    <!-- ====== MANAGER-ONLY MENU ITEMS ====== -->
+                    {% if session.get('role') == 'manager' %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                            <i class="bi bi-capsule"></i> Medicines
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{{ url_for('medicines.list_medicines') }}">Manage Medicines</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('medicines.stock_overview') }}">Stock Levels</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                            <i class="bi bi-truck"></i> Suppliers
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{{ url_for('suppliers.list_suppliers') }}">Manage Suppliers</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('orders.list_orders') }}">Purchase Orders</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                            <i class="bi bi-graph-up"></i> Reports
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{{ url_for('reports.reports_dashboard') }}"><i class="bi bi-speedometer2"></i> Reports Dashboard</a></li>
+<li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ url_for('reports.revenue_report') }}">Revenue Report</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('reports.spending_report') }}">Supplier Spending</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('reports.low_stock_report') }}">Low Stock</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('reports.expiring_report') }}">Expiring Medicines</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('users.list_users') }}">
+                            <i class="bi bi-people"></i> Users
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    <!-- ====== STAFF-ONLY MENU ITEMS ====== -->
+                    {% if session.get('role') == 'staff' %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                            <i class="bi bi-file-medical"></i> Prescriptions
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{{ url_for('prescriptions.create_prescription') }}">New Prescription</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('prescriptions.list_prescriptions') }}">View Prescriptions</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                            <i class="bi bi-prescription2"></i> Dispensing
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{{ url_for('prescriptions.list_prescriptions') }}">Dispense Medicine</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('dispensing.dispensing_history') }}">Dispensing History</a></li>
+                        </ul>
+                    </li>
+                    {% endif %}
+
+                    <!-- Stock Adjustments - visible to both roles -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('adjustments.list_adjustments') }}">
+                            <i class="bi bi-box-seam"></i> Stock Adjustments
+                        </a>
+                    </li>
+                </ul>
+
+                <!-- Right side of navbar - user info and logout -->
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle"></i>
+                            {{ session.get('full_name', 'User') }}
+                            <!-- Badge showing the user's role -->
+                            <span class="badge {% if session.get('role') == 'manager' %}bg-warning text-dark{% else %}bg-info{% endif %}">
+                                {{ session.get('role', 'unknown')|title }}
+                            </span>
+                        </a>
+
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="{{ url_for('adjustments.activity_history') }}">
+                                <i class="bi bi-clock-history"></i> My Activity
+                            </a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('users.change_password') }}">
+                                <i class="bi bi-key"></i> Change Password
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="{{ url_for('logout') }}">
+                                <i class="bi bi-box-arrow-right"></i> Logout
+                            </a></li>
+                        </ul>
+                        
+                </ul>
+            </div>
+        </div>
+    </nav>
+    {% endif %}
+
+    <!-- ============================================ -->
+    <!-- FLASH MESSAGES -->
+    <!-- These show success/error/warning messages -->
+    <!-- flash() in Python sends messages here -->
+    <!-- ============================================ -->
+    <div class="container mt-3">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- ============================================ -->
+    <!-- MAIN CONTENT AREA -->
+    <!-- Each page fills this block with its content -->
+    <!-- ============================================ -->
+    <main class="container mt-4 mb-5">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- ============================================ -->
+    <!-- FOOTER -->
+    <!-- ============================================ -->
+    <footer class="bg-light text-center text-muted py-3 mt-auto">
+        <div class="container">
+            <p class="mb-0">&copy; 2026 CityPharma - Pharmacy Management System</p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Our custom JavaScript -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <!-- Page-specific scripts -->
+    {% block scripts %}{% endblock %}
+</body>
+</html>

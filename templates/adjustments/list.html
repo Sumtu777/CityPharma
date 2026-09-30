@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Stock Adjustments{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-box-seam"></i> Stock Adjustments</h2>
+    <a href="{{ url_for('adjustments.new_adjustment') }}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> New Adjustment
+    </a>
+</div>
+
+<!-- Adjustments History Table -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">Adjustment History</h5>
+    </div>
+    <div class="card-body">
+        {% if adjustments %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Date/Time</th>
+                        <th>Medicine</th>
+                        <th>Batch</th>
+                        <th>Type</th>
+                        <th>Quantity</th>
+                        <th>Reason</th>
+                        <th>Adjusted By</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for adj in adjustments %}
+                    <tr>
+                        <td>{{ adj.adjustment_date.strftime('%d/%m/%Y %H:%M') }}</td>
+                        <td>
+                            <strong>{{ adj.medicine_name }}</strong><br>
+                            <small class="text-muted">{{ adj.strength }} {{ adj.dosage_form }}</small>
+                        </td>
+                        <td>
+                            {{ adj.batch_number }}<br>
+                            <small class="text-muted">Exp: {{ adj.expiry_date.strftime('%d/%m/%Y') }}</small>
+                        </td>
+                        <td>
+                            {% if adj.adjustment_type == 'increase' %}
+                                <span class="badge bg-success">
+                                    <i class="bi bi-arrow-up"></i> Increase
+                                </span>
+                            {% else %}
+                                <span class="badge bg-danger">
+                                    <i class="bi bi-arrow-down"></i> Decrease
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>{{ adj.quantity }}</td>
+                        <td>{{ adj.reason }}</td>
+                        <td>{{ adj.adjusted_by_name }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-box-seam display-4 text-muted"></i>
+            <p class="text-muted mt-2">No stock adjustments recorded yet.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

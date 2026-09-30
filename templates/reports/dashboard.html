@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}Reports Dashboard{% endblock %}
+
+{% block content %}
+<h2 class="mb-4"><i class="bi bi-graph-up"></i> Reports Dashboard</h2>
+
+<!-- Summary Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="card border-primary h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-capsule display-6 text-primary"></i>
+                <h3 class="mt-2">{{ total_medicines }}</h3>
+                <p class="text-muted mb-0">Total Medicines</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-warning h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-exclamation-triangle display-6 text-warning"></i>
+                <h3 class="mt-2">{{ low_stock_count }}</h3>
+                <p class="text-muted mb-0">Low Stock Items</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-danger h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-x-circle display-6 text-danger"></i>
+                <h3 class="mt-2">{{ out_of_stock_count }}</h3>
+                <p class="text-muted mb-0">Out of Stock</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-info h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-clock display-6 text-info"></i>
+                <h3 class="mt-2">{{ expiring_count }}</h3>
+                <p class="text-muted mb-0">Expiring (30 days)</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="card border-success h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-currency-pound display-6 text-success"></i>
+                <h3 class="mt-2">£{{ "%.2f"|format(monthly_revenue) }}</h3>
+                <p class="text-muted mb-0">Revenue This Month</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-dark h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-cart display-6 text-dark"></i>
+                <h3 class="mt-2">£{{ "%.2f"|format(monthly_spending) }}</h3>
+                <p class="text-muted mb-0">Spending This Month</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-primary h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-prescription2 display-6 text-primary"></i>
+                <h3 class="mt-2">{{ total_dispensed }}</h3>
+                <p class="text-muted mb-0">Prescriptions Dispensed</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-secondary h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-truck display-6 text-secondary"></i>
+                <h3 class="mt-2">{{ total_suppliers }}</h3>
+                <p class="text-muted mb-0">Active Suppliers</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Report Links -->
+<div class="row g-4">
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header"><h5 class="mb-0"><i class="bi bi-currency-pound"></i> Financial Reports</h5></div>
+            <div class="card-body">
+                <a href="{{ url_for('reports.revenue_report') }}" class="btn btn-outline-success w-100 mb-2">
+                    <i class="bi bi-graph-up-arrow"></i> Monthly Prescription Revenue
+                </a>
+                <a href="{{ url_for('reports.spending_report') }}" class="btn btn-outline-dark w-100">
+                    <i class="bi bi-graph-down-arrow"></i> Monthly Supplier Spending
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header"><h5 class="mb-0"><i class="bi bi-capsule"></i> Stock Reports</h5></div>
+            <div class="card-body">
+                <a href="{{ url_for('reports.low_stock_report') }}" class="btn btn-outline-warning w-100 mb-2">
+                    <i class="bi bi-exclamation-triangle"></i> Low Stock Medicines
+                </a>
+                <a href="{{ url_for('reports.expiring_report') }}" class="btn btn-outline-danger w-100">
+                    <i class="bi bi-clock"></i> Expiring Medicines
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

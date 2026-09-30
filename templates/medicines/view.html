@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}{{ medicine.name }}{% endblock %}
+
+{% block content %}
+<!-- Medicine Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2><i class="bi bi-capsule"></i> {{ medicine.name }}</h2>
+        <p class="text-muted mb-0">{{ medicine.type }} | {{ medicine.strength }} | {{ medicine.dosage_form }}</p>
+    </div>
+    <div>
+        <a href="{{ url_for('medicines.edit_medicine', medicine_id=medicine.medicine_id) }}" class="btn btn-warning">
+            <i class="bi bi-pencil"></i> Edit
+        </a>
+        <a href="{{ url_for('medicines.list_medicines') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Back
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Medicine Details Card -->
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-header"><h5 class="mb-0">Details</h5></div>
+            <div class="card-body">
+                <p><strong>Type:</strong> {{ medicine.type }}</p>
+                <p><strong>Strength:</strong> {{ medicine.strength }}</p>
+                <p><strong>Dosage Form:</strong> {{ medicine.dosage_form }}</p>
+                <p><strong>Low Stock Threshold:</strong> {{ medicine.low_stock_threshold }}</p>
+                <p><strong>Selling Price:</strong> £{{ "%.2f"|format(medicine.selling_price or 0) }}</p>
+                <p><strong>Description:</strong> {{ medicine.description or 'N/A' }}</p>
+                <hr>
+                <p>
+                    <strong>Total Available Stock:</strong>
+                    {% if total_stock <= 0 %}
+                        <span class="badge bg-danger fs-6">Out of Stock</span>
+                    {% elif total_stock <= medicine.low_stock_threshold %}
+                        <span class="badge bg-warning text-dark fs-6">{{ total_stock }} (Low)</span>
+                    {% else %}
+                        <span class="badge bg-success fs-6">{{ total_stock }}</span>
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Batches Card -->
+    <div class="col-md-8 mb-4">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Batches</h5>
+                <a href="{{ url_for('medicines.add_batch', medicine_id=medicine.medicine_id) }}"
+                   class="btn btn-primary btn-sm">
+                    <i class="bi bi-plus-circle"></i> Add Batch
+                </a>
+            </div>
+            <div class="card-body">
+                {% if batches %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Batch Number</th>
+                                <th>Quantity</th>
+                                <th>Expiry Date</th>
+                                <th>Status</th>
+                                <th>Date Received</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for batch in batches %}
+                            <tr class="{% if batch.expiry_status == 'expired' %}table-danger{% elif batch.expiry_status == 'expiring_soon' %}table-warning{% endif %}">
+                                <td>{{ batch.batch_number }}</td>
+                                <td>{{ batch.quantity }}</td>
+                                <td>{{ batch.expiry_date.strftime('%d/%m/%Y') }}</td>
+                                <td>
+                                    {% if batch.expiry_status == 'expired' %}
+                                        <span class="badge bg-danger">Expired</span>
+                                    {% elif batch.expiry_status == 'expiring_soon' %}
+                                        <span class="badge bg-warning text-dark">Expiring Soon</span>
+                                    {% else %}
+                                        <span class="badge bg-success">Valid</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ batch.date_received.strftime('%d/%m/%Y') }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <p class="text-muted">No batches yet. Add a batch to start tracking stock.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Linked Suppliers -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">Linked Suppliers</h5>
+    </div>
+    <div class="card-body">
+        {% if suppliers %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Supplier Name</th>
+                        <th>Contact Person</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Unit Cost</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for supplier in suppliers %}
+                    <tr>
+                        <td>{{ supplier.name }}</td>
+                        <td>{{ supplier.contact_person or 'N/A' }}</td>
+                        <td>{{ supplier.email or 'N/A' }}</td>
+                        <td>{{ supplier.phone or 'N/A' }}</td>
+                        <td>£{{ "%.2f"|format(supplier.unit_cost) if supplier.unit_cost else 'N/A' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted text-center py-3">No suppliers linked yet. Link suppliers from the Supplier Management page.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}Activity History{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-clock-history"></i> Activity History</h2>
+</div>
+
+<!-- Filters -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" action="{{ url_for('adjustments.activity_history') }}" class="row g-3">
+            <!-- View mode toggle (Manager only) -->
+            {% if session.get('role') == 'manager' %}
+            <div class="col-md-2">
+                <select class="form-select" name="view">
+                    <option value="mine" {% if view_mode == 'mine' %}selected{% endif %}>My Activity</option>
+                    <option value="all" {% if view_mode == 'all' %}selected{% endif %}>All Activity</option>
+                </select>
+            </div>
+            {% endif %}
+
+            <div class="col-md-{% if session.get('role') == 'manager' %}3{% else %}4{% endif %}">
+                <select class="form-select" name="action">
+                    <option value="all" {% if current_action == 'all' %}selected{% endif %}>All Actions</option>
+                    {% for action_type in action_types %}
+                        <option value="{{ action_type }}"
+                                {% if current_action == action_type %}selected{% endif %}>
+                            {{ action_type }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-{% if session.get('role') == 'manager' %}5{% else %}5{% endif %}">
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                    <input type="text" class="form-control" name="search"
+                           placeholder="Search activity details..."
+                           value="{{ search }}">
+                </div>
+            </div>
+
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-outline-primary w-100">
+                    <i class="bi bi-funnel"></i> Filter
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Activity Table -->
+<div class="card">
+    <div class="card-body">
+        {% if activities %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Date/Time</th>
+                        <th>User</th>
+                        <th>Action</th>
+                        <th>Table</th>
+                        <th>Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for activity in activities %}
+                    <tr>
+                        <td>
+                            <small>{{ activity.action_date.strftime('%d/%m/%Y %H:%M:%S') }}</small>
+                        </td>
+                        <td>
+                            {{ activity.user_name or 'System' }}
+                            {% if activity.user_role %}
+                                <br><small class="text-muted">{{ activity.user_role|title }}</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if activity.action_type == 'LOGIN' or activity.action_type == 'LOGOUT' %}
+                                <span class="badge bg-secondary">{{ activity.action_type }}</span>
+                            {% elif 'STOCK_IN' in activity.action_type %}
+                                <span class="badge bg-success">{{ activity.action_type }}</span>
+                            {% elif 'STOCK_OUT' in activity.action_type %}
+                                <span class="badge bg-danger">{{ activity.action_type }}</span>
+                            {% elif 'ADJUSTMENT' in activity.action_type %}
+                                <span class="badge bg-warning text-dark">{{ activity.action_type }}</span>
+                            {% elif 'DISPENSING' in activity.action_type %}
+                                <span class="badge bg-info">{{ activity.action_type }}</span>
+                            {% elif 'PRESCRIPTION' in activity.action_type %}
+                                <span class="badge bg-primary">{{ activity.action_type }}</span>
+                            {% elif 'ORDER' in activity.action_type %}
+                                <span class="badge bg-dark">{{ activity.action_type }}</span>
+                            {% else %}
+                                <span class="badge bg-light text-dark">{{ activity.action_type }}</span>
+                            {% endif %}
+                        </td>
+                        <td><small>{{ activity.table_name or 'N/A' }}</small></td>
+                        <td><small>{{ activity.details or 'N/A' }}</small></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="text-muted text-center mt-2">
+            <small>Showing most recent 100 records</small>
+        </div>
+
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-clock-history display-4 text-muted"></i>
+            <p class="text-muted mt-2">No activity records found.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

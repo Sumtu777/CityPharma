@@ -1,0 +1,267 @@
+{% extends "base.html" %}
+
+{% block title %}Manager Dashboard{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-speedometer2"></i> Manager Dashboard</h2>
+    <span class="text-muted">Welcome, {{ session.get('full_name') }}</span>
+</div>
+
+<!-- Top Summary Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="card border-primary h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-capsule display-6 text-primary"></i>
+                <h3 class="mt-2">{{ total_medicines or 0 }}</h3>
+                <p class="text-muted mb-1">Total Medicines</p>
+                <a href="{{ url_for('medicines.list_medicines') }}" class="btn btn-outline-primary btn-sm">Manage</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-success h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-truck display-6 text-success"></i>
+                <h3 class="mt-2">{{ total_suppliers or 0 }}</h3>
+                <p class="text-muted mb-1">Active Suppliers</p>
+                <a href="{{ url_for('suppliers.list_suppliers') }}" class="btn btn-outline-success btn-sm">Manage</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-warning h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-exclamation-triangle display-6 text-warning"></i>
+                <h3 class="mt-2">{{ low_stock or 0 }}</h3>
+                <p class="text-muted mb-1">Low Stock Items</p>
+                <a href="{{ url_for('reports.low_stock_report') }}" class="btn btn-outline-warning btn-sm">View</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-info h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-cart display-6 text-info"></i>
+                <h3 class="mt-2">{{ pending_orders or 0 }}</h3>
+                <p class="text-muted mb-1">Pending Orders</p>
+                <a href="{{ url_for('orders.list_orders', status='pending') }}" class="btn btn-outline-info btn-sm">View</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================ -->
+<!-- REPORTS SNAPSHOT -->
+<!-- ============================================ -->
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="bi bi-graph-up"></i> Reports Snapshot</h5>
+        <a href="{{ url_for('reports.reports_dashboard') }}" class="btn btn-sm btn-outline-dark">
+            View Full Reports <i class="bi bi-arrow-right"></i>
+        </a>
+    </div>
+    <div class="card-body">
+        <!-- Financial Row -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <div class="card bg-success bg-opacity-10 border-success">
+                    <div class="card-body text-center py-3">
+                        <small class="text-muted">Revenue This Month</small>
+                        <h4 class="text-success mb-0">£{{ "%.2f"|format(monthly_revenue or 0) }}</h4>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-danger bg-opacity-10 border-danger">
+                    <div class="card-body text-center py-3">
+                        <small class="text-muted">Spending This Month</small>
+                        <h4 class="text-danger mb-0">£{{ "%.2f"|format(monthly_spending or 0) }}</h4>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card bg-primary bg-opacity-10 border-primary">
+                    <div class="card-body text-center py-3">
+                        <small class="text-muted">Dispensed</small>
+                        <h4 class="text-primary mb-0">{{ total_dispensed or 0 }}</h4>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card bg-warning bg-opacity-10 border-warning">
+                    <div class="card-body text-center py-3">
+                        <small class="text-muted">Expiring Soon</small>
+                        <h4 class="text-warning mb-0">{{ expiring_soon or 0 }}</h4>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card bg-danger bg-opacity-10 border-danger">
+                    <div class="card-body text-center py-3">
+                        <small class="text-muted">Out of Stock</small>
+                        <h4 class="text-danger mb-0">{{ out_of_stock or 0 }}</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-3">
+            <!-- Recent Transactions -->
+            <div class="col-md-7">
+                <div class="card h-100">
+                    <div class="card-header py-2">
+                        <h6 class="mb-0"><i class="bi bi-receipt"></i> Recent Transactions</h6>
+                    </div>
+                    <div class="card-body p-0">
+                        {% if recent_transactions %}
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Receipt</th>
+                                        <th>Patient</th>
+                                        <th>Amount</th>
+                                        <th>Method</th>
+                                        <th>Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for tx in recent_transactions %}
+                                    <tr>
+                                        <td><small>{{ tx.receipt_reference }}</small></td>
+                                        <td><small>{{ tx.patient_name }}</small></td>
+                                        <td><small class="fw-bold">£{{ "%.2f"|format(tx.amount) }}</small></td>
+                                        <td>
+                                            {% if tx.payment_method == 'cash' %}
+                                                <span class="badge bg-success" style="font-size:0.7em">Cash</span>
+                                            {% elif tx.payment_method == 'card' %}
+                                                <span class="badge bg-primary" style="font-size:0.7em">Card</span>
+                                            {% else %}
+                                                <span class="badge bg-info" style="font-size:0.7em">Contactless</span>
+                                            {% endif %}
+                                        </td>
+                                        <td><small>{{ tx.payment_date.strftime('%d/%m %H:%M') }}</small></td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <p class="text-muted text-center py-3 mb-0">No transactions yet</p>
+                        {% endif %}
+                    </div>
+                    {% if recent_transactions %}
+                    <div class="card-footer py-1 text-end">
+                        <a href="{{ url_for('reports.revenue_report') }}" class="btn btn-sm btn-link">View all</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Low Stock Alert -->
+            <div class="col-md-5">
+                <div class="card h-100">
+                    <div class="card-header py-2">
+                        <h6 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Low Stock Alert</h6>
+                    </div>
+                    <div class="card-body p-0">
+                        {% if low_stock_medicines %}
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Medicine</th>
+                                        <th>Stock</th>
+                                        <th>Threshold</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for med in low_stock_medicines %}
+                                    <tr class="{% if med.stock == 0 %}table-danger{% else %}table-warning{% endif %}">
+                                        <td>
+                                            <small><strong>{{ med.name }}</strong></small><br>
+                                            <small class="text-muted">{{ med.strength }} {{ med.dosage_form }}</small>
+                                        </td>
+                                        <td>
+                                            {% if med.stock == 0 %}
+                                                <span class="badge bg-danger">0</span>
+                                            {% else %}
+                                                <span class="badge bg-warning text-dark">{{ med.stock }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td><small>{{ med.low_stock_threshold }}</small></td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <p class="text-muted text-center py-3 mb-0">All medicines well stocked!</p>
+                        {% endif %}
+                    </div>
+                    {% if low_stock_medicines %}
+                    <div class="card-footer py-1 text-end">
+                        <a href="{{ url_for('reports.low_stock_report') }}" class="btn btn-sm btn-link">View all</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-lightning"></i> Quick Actions</h5>
+    </div>
+    <div class="card-body">
+        <div class="row g-2">
+            <div class="col-md-3">
+                <a href="{{ url_for('medicines.add_medicine') }}" class="btn btn-primary w-100">
+                    <i class="bi bi-plus-circle"></i> Add Medicine
+                </a>
+            </div>
+            <div class="col-md-3">
+                <a href="{{ url_for('suppliers.add_supplier') }}" class="btn btn-success w-100">
+                    <i class="bi bi-plus-circle"></i> Add Supplier
+                </a>
+            </div>
+            <div class="col-md-3">
+                <a href="{{ url_for('orders.create_order') }}" class="btn btn-warning w-100">
+                    <i class="bi bi-cart-plus"></i> New Purchase Order
+                </a>
+            </div>
+            <div class="col-md-3">
+                <a href="{{ url_for('adjustments.new_adjustment') }}" class="btn btn-info w-100">
+                    <i class="bi bi-box-seam"></i> Stock Adjustment
+                </a>
+            </div>
+        </div>
+        <div class="row g-2 mt-2">
+            <div class="col-md-3">
+                <a href="{{ url_for('reports.reports_dashboard') }}" class="btn btn-outline-dark w-100">
+                    <i class="bi bi-graph-up"></i> Full Reports
+                </a>
+            </div>
+            <div class="col-md-3">
+                <a href="{{ url_for('users.list_users') }}" class="btn btn-outline-secondary w-100">
+                    <i class="bi bi-people"></i> Manage Users
+                </a>
+            </div>
+            <div class="col-md-3">
+                <a href="{{ url_for('medicines.stock_overview') }}" class="btn btn-outline-primary w-100">
+                    <i class="bi bi-box-seam"></i> Stock Overview
+                </a>
+            </div>
+            <div class="col-md-3">
+                <a href="{{ url_for('adjustments.activity_history', view='all') }}" class="btn btn-outline-info w-100">
+                    <i class="bi bi-clock-history"></i> Audit Trail
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

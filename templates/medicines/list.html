@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Medicines{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-capsule"></i> Medicines</h2>
+    <a href="{{ url_for('medicines.add_medicine') }}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Add Medicine
+    </a>
+</div>
+
+<!-- Search and Filter Bar -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" action="{{ url_for('medicines.list_medicines') }}" class="row g-3">
+            <div class="col-md-6">
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                    <input type="text" class="form-control" name="search"
+                           placeholder="Search by name, type, or strength..."
+                           value="{{ search }}">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" name="type">
+                    <option value="">All Types</option>
+                    {% for t in types %}
+                        <option value="{{ t }}" {% if t == selected_type %}selected{% endif %}>{{ t }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-outline-primary w-100">
+                    <i class="bi bi-funnel"></i> Filter
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Medicines Table -->
+<div class="card">
+    <div class="card-body">
+        {% if medicines %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Name</th>
+                        <th>Type</th>
+                        <th>Strength</th>
+                        <th>Dosage Form</th>
+                        <th>Selling Price</th>
+                        <th>Total Stock</th>
+                        <th>Nearest Expiry</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for med in medicines %}
+                    <tr>
+                        <td>
+                            <a href="{{ url_for('medicines.view_medicine', medicine_id=med.medicine_id) }}"
+                               class="text-decoration-none fw-bold">
+                                {{ med.name }}
+                            </a>
+                        </td>
+                        <td>{{ med.type }}</td>
+                        <td>{{ med.strength }}</td>
+                        <td>{{ med.dosage_form }}</td>
+                        <td>£{{ "%.2f"|format(med.selling_price or 0) }}</td>
+                        <td>
+                            {% if med.total_stock <= 0 %}
+                                <span class="badge bg-danger">Out of Stock</span>
+                            {% elif med.total_stock <= med.low_stock_threshold %}
+                                <span class="badge bg-warning text-dark">{{ med.total_stock }} (Low)</span>
+                            {% else %}
+                                <span class="badge bg-success">{{ med.total_stock }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if med.nearest_expiry %}
+                                {{ med.nearest_expiry.strftime('%d/%m/%Y') }}
+                            {% else %}
+                                <span class="text-muted">No batches</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{{ url_for('medicines.view_medicine', medicine_id=med.medicine_id) }}"
+                               class="btn btn-sm btn-outline-primary" title="View">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <a href="{{ url_for('medicines.edit_medicine', medicine_id=med.medicine_id) }}"
+                               class="btn btn-sm btn-outline-warning" title="Edit">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <form method="POST"
+                                  action="{{ url_for('medicines.delete_medicine', medicine_id=med.medicine_id) }}"
+                                  style="display:inline;"
+                                  onsubmit="return confirm('Are you sure you want to remove this medicine?');">
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-capsule display-4 text-muted"></i>
+            <p class="text-muted mt-2">No medicines found. Click "Add Medicine" to get started.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

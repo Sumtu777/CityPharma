@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}Add Batch - {{ medicine.name }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0"><i class="bi bi-plus-circle"></i> Add Batch</h4>
+                <small class="text-muted">For: {{ medicine.name }} ({{ medicine.strength }} {{ medicine.dosage_form }})</small>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('medicines.add_batch', medicine_id=medicine.medicine_id) }}">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="batch_number" class="form-label">Batch Number <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="batch_number" name="batch_number"
+                                   placeholder="e.g., BN-2026-001" required>
+                            <small class="text-muted">Unique identifier from the manufacturer</small>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="quantity" class="form-label">Quantity <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="quantity" name="quantity"
+                                   min="1" placeholder="e.g., 100" required>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="expiry_date" class="form-label">Expiry Date <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="expiry_date" name="expiry_date" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="date_received" class="form-label">Date Received <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="date_received" name="date_received"
+                                   value="{{ now }}" required>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('medicines.view_medicine', medicine_id=medicine.medicine_id) }}"
+                           class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> Add Batch
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

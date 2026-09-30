@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}Supplier Spending Report{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-graph-down-arrow"></i> Monthly Supplier Spending</h2>
+    <div>
+        <form method="GET" class="d-inline">
+            <select name="year" class="form-select d-inline-block" style="width:auto;"
+                    onchange="this.form.submit()">
+                {% for year in available_years %}
+                    <option value="{{ year }}" {% if year == selected_year %}selected{% endif %}>{{ year }}</option>
+                {% endfor %}
+            </select>
+        </form>
+        <a href="{{ url_for('reports.reports_dashboard') }}" class="btn btn-outline-secondary ms-2">
+            <i class="bi bi-arrow-left"></i> Back
+        </a>
+    </div>
+</div>
+
+<!-- Yearly Summary -->
+<div class="row g-4 mb-4">
+    <div class="col-md-6">
+        <div class="card border-dark">
+            <div class="card-body text-center">
+                <h6 class="text-muted">Total Spending ({{ selected_year }})</h6>
+                <h2>£{{ "%.2f"|format(yearly_totals.yearly_total) }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card border-primary">
+            <div class="card-body text-center">
+                <h6 class="text-muted">Total Orders Received ({{ selected_year }})</h6>
+                <h2 class="text-primary">{{ yearly_totals.yearly_orders }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Monthly Breakdown -->
+    <div class="col-md-7 mb-4">
+        <div class="card h-100">
+            <div class="card-header"><h5 class="mb-0">Monthly Breakdown</h5></div>
+            <div class="card-body">
+                {% if monthly_data %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Month</th>
+                                <th>Orders</th>
+                                <th>Total Spent</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for month in monthly_data %}
+                            <tr>
+                                <td><strong>{{ month.month_name }}</strong></td>
+                                <td>{{ month.order_count }}</td>
+                                <td class="fw-bold">£{{ "%.2f"|format(month.total_spending) }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted text-center py-3">No spending data for {{ selected_year }}.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Spending by Supplier -->
+    <div class="col-md-5 mb-4">
+        <div class="card h-100">
+            <div class="card-header"><h5 class="mb-0">Spending by Supplier</h5></div>
+            <div class="card-body">
+                {% if supplier_spending %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Supplier</th>
+                                <th>Orders</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for supplier in supplier_spending %}
+                            <tr>
+                                <td><strong>{{ supplier.supplier_name }}</strong></td>
+                                <td>{{ supplier.order_count }}</td>
+                                <td class="fw-bold">£{{ "%.2f"|format(supplier.total_spent) }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted text-center py-3">No supplier spending data.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

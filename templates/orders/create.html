@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}New Purchase Order{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0"><i class="bi bi-cart-plus"></i> Create New Purchase Order</h4>
+            </div>
+            <div class="card-body">
+                {% if suppliers %}
+                <form method="POST" action="{{ url_for('orders.create_order') }}">
+                    <div class="mb-3">
+                        <label for="supplier_id" class="form-label">Select Supplier <span class="text-danger">*</span></label>
+                        <select class="form-select" id="supplier_id" name="supplier_id" required>
+                            <option value="">Choose a supplier...</option>
+                            {% for supplier in suppliers %}
+                                <option value="{{ supplier.supplier_id }}">
+                                    {{ supplier.name }}
+                                    {% if supplier.contact_person %} ({{ supplier.contact_person }}){% endif %}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Notes</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="3"
+                                  placeholder="Any notes about this order..."></textarea>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('orders.list_orders') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> Create Order
+                        </button>
+                    </div>
+                </form>
+                {% else %}
+                <div class="text-center py-4">
+                    <p class="text-muted">No suppliers available. Please add a supplier first.</p>
+                    <a href="{{ url_for('suppliers.add_supplier') }}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle"></i> Add Supplier
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

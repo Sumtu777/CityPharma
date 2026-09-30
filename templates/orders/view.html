@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+
+{% block title %}Purchase Order PO-{{ "%04d"|format(order.order_id) }}{% endblock %}
+
+{% block content %}
+<!-- Order Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2><i class="bi bi-cart"></i> PO-{{ "%04d"|format(order.order_id) }}</h2>
+        <p class="text-muted mb-0">Supplier: {{ order.supplier_name }}</p>
+    </div>
+    <div>
+        {% if order.status == 'pending' %}
+            <a href="{{ url_for('orders.receive_order', order_id=order.order_id) }}"
+               class="btn btn-success {% if not items %}disabled{% endif %}">
+                <i class="bi bi-box-arrow-in-down"></i> Receive Order
+            </a>
+            <form method="POST"
+                  action="{{ url_for('orders.cancel_order', order_id=order.order_id) }}"
+                  style="display:inline;"
+                  onsubmit="return confirm('Are you sure you want to cancel this order?');">
+                <button type="submit" class="btn btn-danger">
+                    <i class="bi bi-x-circle"></i> Cancel Order
+                </button>
+            </form>
+        {% endif %}
+        <a href="{{ url_for('orders.list_orders') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Back
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Order Info -->
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-header"><h5 class="mb-0">Order Details</h5></div>
+            <div class="card-body">
+                <p><strong>Order #:</strong> PO-{{ "%04d"|format(order.order_id) }}</p>
+                <p><strong>Supplier:</strong> {{ order.supplier_name }}</p>
+                <p><strong>Ordered By:</strong> {{ order.ordered_by_name }}</p>
+                <p><strong>Order Date:</strong> {{ order.order_date.strftime('%d/%m/%Y %H:%M') }}</p>
+                <p>
+                    <strong>Status:</strong>
+                    {% if order.status == 'received' %}
+                        <span class="badge bg-success">Received</span>
+                    {% elif order.status == 'cancelled' %}
+                        <span class="badge bg-danger">Cancelled</span>
+                    {% else %}
+                        <span class="badge bg-warning text-dark">Pending</span>
+                    {% endif %}
+                </p>
+                {% if order.received_date %}
+                    <p><strong>Received Date:</strong> {{ order.received_date.strftime('%d/%m/%Y %H:%M') }}</p>
+                {% endif %}
+                <p><strong>Total Cost:</strong> <span class="fs-5 fw-bold">£{{ "%.2f"|format(total_cost) }}</span></p>
+                {% if order.notes %}
+                    <p><strong>Notes:</strong> {{ order.notes }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Items -->
+    <div class="col-md-8 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0">Order Items</h5>
+            </div>
+            <div class="card-body">
+                <!-- Add Item Form (only for pending orders) -->
+                {% if order.status == 'pending' and available_medicines %}
+                <form method="POST"
+                      action="{{ url_for('orders.add_order_item', order_id=order.order_id) }}"
+                      class="row g-2 mb-3 p-3 bg-light rounded">
+                    <div class="col-md-4">
+                        <select class="form-select" name="medicine_id" required>
+                            <option value="">Select medicine...</option>
+                            {% for med in available_medicines %}
+                                <option value="{{ med.medicine_id }}">
+                                    {{ med.name }} ({{ med.strength }} {{ med.dosage_form }})
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <input type="number" class="form-control" name="quantity"
+                               min="1" placeholder="Qty" required>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="input-group">
+                            <span class="input-group-text">£</span>
+                            <input type="number" class="form-control" name="unit_cost"
+                                   step="0.01" min="0" placeholder="Unit cost" required>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-plus"></i> Add Item
+                        </button>
+                    </div>
+                </form>
+                {% endif %}
+
+                <!-- Items Table -->
+                {% if items %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Medicine</th>
+                                <th>Strength</th>
+                                <th>Qty Ordered</th>
+                                <th>Unit Cost</th>
+                                <th>Line Total</th>
+                                {% if order.status == 'received' %}
+                                    <th>Qty Received</th>
+                                    <th>Batch #</th>
+                                    <th>Expiry</th>
+                                {% endif %}
+                                {% if order.status == 'pending' %}
+                                    <th>Action</th>
+                                {% endif %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in items %}
+                            <tr>
+                                <td>{{ item.medicine_name }}</td>
+                                <td>{{ item.strength }} {{ item.dosage_form }}</td>
+                                <td>{{ item.quantity_ordered }}</td>
+                                <td>£{{ "%.2f"|format(item.unit_cost) }}</td>
+                                <td>£{{ "%.2f"|format(item.quantity_ordered * item.unit_cost) }}</td>
+                                {% if order.status == 'received' %}
+                                    <td>{{ item.quantity_received }}</td>
+                                    <td>{{ item.batch_number or 'N/A' }}</td>
+                                    <td>{{ item.expiry_date.strftime('%d/%m/%Y') if item.expiry_date else 'N/A' }}</td>
+                                {% endif %}
+                                {% if order.status == 'pending' %}
+                                    <td>
+                                        <form method="POST"
+                                              action="{{ url_for('orders.remove_order_item', item_id=item.item_id) }}"
+                                              style="display:inline;"
+                                              onsubmit="return confirm('Remove this item?');">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                {% endif %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr class="table-light">
+                                <td colspan="4" class="text-end fw-bold">Total:</td>
+                                <td class="fw-bold">£{{ "%.2f"|format(total_cost) }}</td>
+                                {% if order.status == 'received' %}
+                                    <td colspan="3"></td>
+                                {% endif %}
+                                {% if order.status == 'pending' %}
+                                    <td></td>
+                                {% endif %}
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <p class="text-muted">No items in this order yet. Use the form above to add medicines.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block title %}Dispense Prescription{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0">
+                    <i class="bi bi-prescription2"></i>
+                    Dispense Prescription RX-{{ "%05d"|format(prescription.prescription_id) }}
+                </h4>
+                <small>Patient: {{ prescription.patient_name }} | Doctor: Dr. {{ prescription.doctor_name }}</small>
+            </div>
+            <div class="card-body">
+
+                {% if not can_dispense %}
+                <div class="alert alert-danger">
+                    <i class="bi bi-x-circle"></i>
+                    <strong>Cannot dispense this prescription.</strong>
+                    Insufficient stock for one or more medicines.
+                </div>
+                {% endif %}
+
+                <!-- Stock Allocation Preview -->
+                <h5 class="mb-3"><i class="bi bi-capsule"></i> Medicines to Dispense</h5>
+                <div class="table-responsive mb-4">
+                    <table class="table table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Medicine</th>
+                                <th>Prescribed Qty</th>
+                                <th>Batch Allocation (FEFO)</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for alloc_data in all_allocations %}
+                            <tr>
+                                <td>
+                                    <strong>{{ alloc_data.item.medicine_name }}</strong><br>
+                                    <small class="text-muted">{{ alloc_data.item.strength }} {{ alloc_data.item.dosage_form }}</small>
+                                    {% if alloc_data.item.dosage_instructions %}
+                                        <br><small class="text-info">{{ alloc_data.item.dosage_instructions }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>{{ alloc_data.item.quantity }}</td>
+                                <td>
+                                    {% if alloc_data.allocations %}
+                                        {% for alloc in alloc_data.allocations %}
+                                            <span class="badge bg-light text-dark border mb-1">
+                                                Batch {{ alloc.batch_number }}:
+                                                {{ alloc.quantity_to_take }} units
+                                                (exp: {{ alloc.expiry_date.strftime('%d/%m/%Y') }})
+                                            </span><br>
+                                        {% endfor %}
+                                    {% else %}
+                                        <span class="text-danger">No stock available</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if alloc_data.error %}
+                                        <span class="badge bg-danger">Insufficient Stock</span>
+                                    {% else %}
+                                        <span class="badge bg-success">Ready</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                {% if can_dispense %}
+                <!-- Payment Form -->
+                <form method="POST"
+                      action="{{ url_for('dispensing.dispense_prescription', prescription_id=prescription.prescription_id) }}">
+
+                    <h5 class="mb-3"><i class="bi bi-credit-card"></i> Payment Details</h5>
+
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        <strong>Note:</strong> This is a simulated payment. No real payment processing occurs.
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="payment_method" class="form-label">
+                                Payment Method <span class="text-danger">*</span>
+                            </label>
+                            <div class="d-flex gap-2">
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="payment_method"
+                                           id="cash" value="cash" checked>
+                                    <label class="form-check-label" for="cash">
+                                        <i class="bi bi-cash"></i> Cash
+                                    </label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="payment_method"
+                                           id="card" value="card">
+                                    <label class="form-check-label" for="card">
+                                        <i class="bi bi-credit-card"></i> Card
+                                    </label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="payment_method"
+                                           id="contactless" value="contactless">
+                                    <label class="form-check-label" for="contactless">
+                                        <i class="bi bi-wifi"></i> Contactless
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="payment_amount" class="form-label">
+                                Amount (£) <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">£</span>
+                                <input type="number" class="form-control" id="payment_amount"
+                                       name="payment_amount" step="0.01" min="0"
+                                       value="{{ '%.2f'|format(total_cost) }}" required>
+                            </div>
+                            <small class="text-muted">Estimated cost based on supplier prices</small>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('prescriptions.view_prescription', prescription_id=prescription.prescription_id) }}"
+                           class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-success btn-lg"
+                                onclick="return confirm('Confirm dispensing? Stock levels will be reduced and a payment record will be created.');">
+                            <i class="bi bi-check-circle"></i> Confirm Dispense & Payment
+                        </button>
+                    </div>
+                </form>
+                {% else %}
+                <div class="d-flex justify-content-between">
+                    <a href="{{ url_for('prescriptions.view_prescription', prescription_id=prescription.prescription_id) }}"
+                       class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Back to Prescription
+                    </a>
+                </div>
+                {% endif %}
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

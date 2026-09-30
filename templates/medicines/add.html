@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}Add Medicine{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0"><i class="bi bi-plus-circle"></i> Add New Medicine</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('medicines.add_medicine') }}">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="name" class="form-label">Medicine Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="name" name="name"
+                                   placeholder="e.g., Paracetamol" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="type" class="form-label">Type <span class="text-danger">*</span></label>
+                            <select class="form-select" id="type" name="type" required>
+                                <option value="">Select type...</option>
+                                <option value="Analgesic">Analgesic (Pain Relief)</option>
+                                <option value="Antibiotic">Antibiotic</option>
+                                <option value="Antihistamine">Antihistamine</option>
+                                <option value="Antifungal">Antifungal</option>
+                                <option value="Anti-inflammatory">Anti-inflammatory</option>
+                                <option value="Antihypertensive">Antihypertensive</option>
+                                <option value="Antidiabetic">Antidiabetic</option>
+                                <option value="Bronchodilator">Bronchodilator</option>
+                                <option value="Cardiovascular">Cardiovascular</option>
+                                <option value="Gastrointestinal">Gastrointestinal</option>
+                                <option value="Vitamin">Vitamin/Supplement</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="strength" class="form-label">Strength <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="strength" name="strength"
+                                   placeholder="e.g., 500mg" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="dosage_form" class="form-label">Dosage Form <span class="text-danger">*</span></label>
+                            <select class="form-select" id="dosage_form" name="dosage_form" required>
+                                <option value="">Select form...</option>
+                                <option value="Tablet">Tablet</option>
+                                <option value="Capsule">Capsule</option>
+                                <option value="Syrup">Syrup</option>
+                                <option value="Injection">Injection</option>
+                                <option value="Cream">Cream</option>
+                                <option value="Ointment">Ointment</option>
+                                <option value="Inhaler">Inhaler</option>
+                                <option value="Drops">Drops</option>
+                                <option value="Suppository">Suppository</option>
+                                <option value="Patch">Patch</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="low_stock_threshold" class="form-label">Low Stock Threshold</label>
+                            <input type="number" class="form-control" id="low_stock_threshold"
+                                   name="low_stock_threshold" value="10" min="0">
+                            <small class="text-muted">Alert when stock falls below this</small>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="selling_price" class="form-label">Selling Price (£) <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text">£</span>
+                                <input type="number" class="form-control" id="selling_price"
+                                       name="selling_price" step="0.01" min="0" value="0.00" required>
+                            </div>
+                            <small class="text-muted">Price charged to patients per unit</small>
+                        </div>
+                    </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description"
+                                  rows="3" placeholder="Optional description or notes..."></textarea>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('medicines.list_medicines') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> Add Medicine
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

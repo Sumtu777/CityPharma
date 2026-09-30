@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Suppliers{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-truck"></i> Suppliers</h2>
+    <a href="{{ url_for('suppliers.add_supplier') }}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Add Supplier
+    </a>
+</div>
+
+<!-- Search Bar -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" action="{{ url_for('suppliers.list_suppliers') }}" class="row g-3">
+            <div class="col-md-9">
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                    <input type="text" class="form-control" name="search"
+                           placeholder="Search by name, contact person, or email..."
+                           value="{{ search }}">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-outline-primary w-100">
+                    <i class="bi bi-funnel"></i> Search
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Suppliers Table -->
+<div class="card">
+    <div class="card-body">
+        {% if suppliers %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Supplier Name</th>
+                        <th>Contact Person</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Medicines Linked</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for supplier in suppliers %}
+                    <tr>
+                        <td>
+                            <a href="{{ url_for('suppliers.view_supplier', supplier_id=supplier.supplier_id) }}"
+                               class="text-decoration-none fw-bold">
+                                {{ supplier.name }}
+                            </a>
+                        </td>
+                        <td>{{ supplier.contact_person or 'N/A' }}</td>
+                        <td>{{ supplier.email or 'N/A' }}</td>
+                        <td>{{ supplier.phone or 'N/A' }}</td>
+                        <td>
+                            <span class="badge bg-secondary">{{ supplier.medicine_count }}</span>
+                        </td>
+                        <td>
+                            <a href="{{ url_for('suppliers.view_supplier', supplier_id=supplier.supplier_id) }}"
+                               class="btn btn-sm btn-outline-primary" title="View">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <a href="{{ url_for('suppliers.edit_supplier', supplier_id=supplier.supplier_id) }}"
+                               class="btn btn-sm btn-outline-warning" title="Edit">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <form method="POST"
+                                  action="{{ url_for('suppliers.delete_supplier', supplier_id=supplier.supplier_id) }}"
+                                  style="display:inline;"
+                                  onsubmit="return confirm('Are you sure you want to remove this supplier?');">
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-truck display-4 text-muted"></i>
+            <p class="text-muted mt-2">No suppliers found. Click "Add Supplier" to get started.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

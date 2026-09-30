@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}New Stock Adjustment{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0"><i class="bi bi-box-seam"></i> New Stock Adjustment</h4>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i>
+                    <strong>Note:</strong> All stock adjustments require a reason and are recorded
+                    in the audit trail for regulatory compliance.
+                </div>
+
+                <form method="POST" action="{{ url_for('adjustments.new_adjustment') }}">
+                    <!-- Step 1: Select Medicine -->
+                    <div class="mb-3">
+                        <label for="medicine_id" class="form-label">
+                            Select Medicine <span class="text-danger">*</span>
+                        </label>
+                        <select class="form-select" id="medicine_id" name="medicine_id" required>
+                            <option value="">Choose a medicine...</option>
+                            {% for med in medicines %}
+                                <option value="{{ med.medicine_id }}">
+                                    {{ med.name }} ({{ med.strength }} {{ med.dosage_form }})
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Step 2: Select Batch (populated by JavaScript) -->
+                    <div class="mb-3">
+                        <label for="batch_id" class="form-label">
+                            Select Batch <span class="text-danger">*</span>
+                        </label>
+                        <select class="form-select" id="batch_id" name="batch_id" required disabled>
+                            <option value="">Select a medicine first...</option>
+                        </select>
+                        <small class="text-muted">Batches are shown with current quantity and expiry status</small>
+                    </div>
+
+                    <!-- Step 3: Adjustment Details -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="adjustment_type" class="form-label">
+                                Adjustment Type <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select" id="adjustment_type" name="adjustment_type" required>
+                                <option value="">Select type...</option>
+                                <option value="increase">Increase (add stock)</option>
+                                <option value="decrease">Decrease (remove stock)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="quantity" class="form-label">
+                                Quantity <span class="text-danger">*</span>
+                            </label>
+                            <input type="number" class="form-control" id="quantity" name="quantity"
+                                   min="1" placeholder="Enter quantity" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="reason" class="form-label">
+                            Reason for Adjustment <span class="text-danger">*</span>
+                        </label>
+                        <textarea class="form-control" id="reason" name="reason" rows="3"
+                                  placeholder="e.g., Damaged goods found during stock check, miscounted during previous intake, spillage..."
+                                  required></textarea>
+                        <small class="text-muted">A reason is mandatory for all adjustments (regulatory requirement)</small>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('adjustments.list_adjustments') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary"
+                                onclick="return confirm('Confirm this stock adjustment?');">
+                            <i class="bi bi-check-circle"></i> Submit Adjustment
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // ============================================
+    // Dynamic batch loading
+    // When the user selects a medicine, we fetch its batches
+    // using an AJAX request to our get-batches endpoint
+    // ============================================
+    document.getElementById('medicine_id').addEventListener('change', function() {
+        const medicineId = this.value;
+        const batchSelect = document.getElementById('batch_id');
+
+        if (!medicineId) {
+            batchSelect.innerHTML = '<option value="">Select a medicine first...</option>';
+            batchSelect.disabled = true;
+            return;
+        }
+
+        // Show loading state
+        batchSelect.innerHTML = '<option value="">Loading batches...</option>';
+        batchSelect.disabled = true;
+
+        // Fetch batches from the server
+        fetch('/adjustments/get-batches/' + medicineId)
+            .then(response => response.text())
+            .then(html => {
+                batchSelect.innerHTML = html;
+                batchSelect.disabled = false;
+            })
+            .catch(error => {
+                batchSelect.innerHTML = '<option value="">Error loading batches</option>';
+                console.error('Error:', error);
+            });
+    });
+</script>
+{% endblock %}

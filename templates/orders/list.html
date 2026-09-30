@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}Purchase Orders{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-cart"></i> Purchase Orders</h2>
+    <a href="{{ url_for('orders.create_order') }}" class="btn btn-primary">
+        <i class="bi bi-cart-plus"></i> New Purchase Order
+    </a>
+</div>
+
+<!-- Status Filter -->
+<div class="btn-group mb-4" role="group">
+    <a href="{{ url_for('orders.list_orders', status='all') }}"
+       class="btn {% if current_status == 'all' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+        All Orders
+    </a>
+    <a href="{{ url_for('orders.list_orders', status='pending') }}"
+       class="btn {% if current_status == 'pending' %}btn-warning{% else %}btn-outline-warning{% endif %}">
+        Pending
+    </a>
+    <a href="{{ url_for('orders.list_orders', status='received') }}"
+       class="btn {% if current_status == 'received' %}btn-success{% else %}btn-outline-success{% endif %}">
+        Received
+    </a>
+    <a href="{{ url_for('orders.list_orders', status='cancelled') }}"
+       class="btn {% if current_status == 'cancelled' %}btn-danger{% else %}btn-outline-danger{% endif %}">
+        Cancelled
+    </a>
+</div>
+
+<!-- Orders Table -->
+<div class="card">
+    <div class="card-body">
+        {% if orders %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Order #</th>
+                        <th>Supplier</th>
+                        <th>Order Date</th>
+                        <th>Items</th>
+                        <th>Total Cost</th>
+                        <th>Status</th>
+                        <th>Ordered By</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                    <tr>
+                        <td>
+                            <a href="{{ url_for('orders.view_order', order_id=order.order_id) }}"
+                               class="text-decoration-none fw-bold">
+                                PO-{{ "%04d"|format(order.order_id) }}
+                            </a>
+                        </td>
+                        <td>{{ order.supplier_name }}</td>
+                        <td>{{ order.order_date.strftime('%d/%m/%Y %H:%M') }}</td>
+                        <td><span class="badge bg-secondary">{{ order.item_count }}</span></td>
+                        <td>£{{ "%.2f"|format(order.calculated_total) }}</td>
+                        <td>
+                            {% if order.status == 'received' %}
+                                <span class="badge bg-success">Received</span>
+                            {% elif order.status == 'cancelled' %}
+                                <span class="badge bg-danger">Cancelled</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark">Pending</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ order.ordered_by_name }}</td>
+                        <td>
+                            <a href="{{ url_for('orders.view_order', order_id=order.order_id) }}"
+                               class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-eye"></i> View
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-cart display-4 text-muted"></i>
+            <p class="text-muted mt-2">No purchase orders found.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

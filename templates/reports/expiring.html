@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}Expiring Medicines Report{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-clock"></i> Expiring Medicines</h2>
+    <div>
+        <form method="GET" class="d-inline">
+            <select name="days" class="form-select d-inline-block" style="width:auto;"
+                    onchange="this.form.submit()">
+                <option value="30" {% if selected_days == 30 %}selected{% endif %}>Next 30 days</option>
+                <option value="60" {% if selected_days == 60 %}selected{% endif %}>Next 60 days</option>
+                <option value="90" {% if selected_days == 90 %}selected{% endif %}>Next 90 days</option>
+            </select>
+        </form>
+        <a href="{{ url_for('reports.reports_dashboard') }}" class="btn btn-outline-secondary ms-2">
+            <i class="bi bi-arrow-left"></i> Back
+        </a>
+    </div>
+</div>
+
+<!-- Already Expired -->
+{% if expired_batches %}
+<div class="card mb-4 border-danger">
+    <div class="card-header bg-danger text-white">
+        <h5 class="mb-0"><i class="bi bi-x-circle"></i> Already Expired ({{ expired_batches|length }} batches)</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Medicine</th>
+                        <th>Batch</th>
+                        <th>Remaining Qty</th>
+                        <th>Expired On</th>
+                        <th>Days Since Expiry</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for batch in expired_batches %}
+                    <tr class="table-danger">
+                        <td>
+                            <strong>{{ batch.medicine_name }}</strong><br>
+                            <small class="text-muted">{{ batch.strength }} {{ batch.dosage_form }}</small>
+                        </td>
+                        <td>{{ batch.batch_number }}</td>
+                        <td>{{ batch.quantity }}</td>
+                        <td>{{ batch.expiry_date.strftime('%d/%m/%Y') }}</td>
+                        <td><span class="badge bg-danger">{{ batch.days_since_expiry }} days ago</span></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Expiring Soon -->
+<div class="card">
+    <div class="card-header bg-warning text-dark">
+        <h5 class="mb-0">
+            <i class="bi bi-exclamation-triangle"></i>
+            Expiring Within {{ selected_days }} Days ({{ expiring_batches|length }} batches)
+        </h5>
+    </div>
+    <div class="card-body">
+        {% if expiring_batches %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Medicine</th>
+                        <th>Batch</th>
+                        <th>Quantity</th>
+                        <th>Expiry Date</th>
+                        <th>Days Left</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for batch in expiring_batches %}
+                    <tr class="{% if batch.days_until_expiry <= 7 %}table-danger{% elif batch.days_until_expiry <= 14 %}table-warning{% endif %}">
+                        <td>
+                            <strong>{{ batch.medicine_name }}</strong><br>
+                            <small class="text-muted">{{ batch.strength }} {{ batch.dosage_form }}</small>
+                        </td>
+                        <td>{{ batch.batch_number }}</td>
+                        <td>{{ batch.quantity }}</td>
+                        <td>{{ batch.expiry_date.strftime('%d/%m/%Y') }}</td>
+                        <td>
+                            {% if batch.days_until_expiry <= 7 %}
+                                <span class="badge bg-danger">{{ batch.days_until_expiry }} days</span>
+                            {% elif batch.days_until_expiry <= 14 %}
+                                <span class="badge bg-warning text-dark">{{ batch.days_until_expiry }} days</span>
+                            {% else %}
+                                <span class="badge bg-info">{{ batch.days_until_expiry }} days</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-check-circle display-4 text-success"></i>
+            <p class="text-muted mt-2">No batches expiring within {{ selected_days }} days.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

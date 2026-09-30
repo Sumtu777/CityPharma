@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}Record Pharmaceutical Waste{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h4 class="mb-0"><i class="bi bi-trash"></i> Record Pharmaceutical Waste</h4>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <strong>Important:</strong> Recording waste permanently removes stock.
+                    This action is logged for regulatory compliance. Use this for expired,
+                    contaminated, damaged, or returned medicines that must be destroyed.
+                </div>
+
+                <form method="POST" action="{{ url_for('adjustments.record_waste') }}">
+                    <div class="mb-3">
+                        <label for="medicine_id" class="form-label">
+                            Select Medicine <span class="text-danger">*</span>
+                        </label>
+                        <select class="form-select" id="waste_medicine_id" name="medicine_id" required>
+                            <option value="">Choose a medicine...</option>
+                            {% for med in medicines %}
+                                <option value="{{ med.medicine_id }}">
+                                    {{ med.name }} ({{ med.strength }} {{ med.dosage_form }})
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="batch_id" class="form-label">
+                            Select Batch <span class="text-danger">*</span>
+                        </label>
+                        <select class="form-select" id="waste_batch_id" name="batch_id" required disabled>
+                            <option value="">Select a medicine first...</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="quantity" class="form-label">
+                            Quantity to Waste <span class="text-danger">*</span>
+                        </label>
+                        <input type="number" class="form-control" id="quantity" name="quantity"
+                               min="1" placeholder="Enter quantity" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="reason" class="form-label">
+                            Reason for Waste <span class="text-danger">*</span>
+                        </label>
+                        <select class="form-select mb-2" id="waste_reason_select">
+                            <option value="">Select a common reason or type your own below...</option>
+                            <option value="Expired medicine - past expiry date">Expired medicine</option>
+                            <option value="Damaged packaging - cannot be dispensed">Damaged packaging</option>
+                            <option value="Contamination detected during inspection">Contamination</option>
+                            <option value="Patient returned unused medicine for disposal">Patient return</option>
+                            <option value="Recalled by manufacturer">Manufacturer recall</option>
+                            <option value="Storage conditions compromised (temperature/humidity)">Storage failure</option>
+                        </select>
+                        <textarea class="form-control" id="reason" name="reason" rows="2"
+                                  placeholder="Provide detailed reason for waste..."
+                                  required></textarea>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('adjustments.list_adjustments') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-danger"
+                                onclick="return confirm('Confirm recording this waste? Stock will be permanently reduced.');">
+                            <i class="bi bi-trash"></i> Record Waste
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Load batches when medicine is selected
+    document.getElementById('waste_medicine_id').addEventListener('change', function() {
+        const medicineId = this.value;
+        const batchSelect = document.getElementById('waste_batch_id');
+
+        if (!medicineId) {
+            batchSelect.innerHTML = '<option value="">Select a medicine first...</option>';
+            batchSelect.disabled = true;
+            return;
+        }
+
+        batchSelect.innerHTML = '<option value="">Loading batches...</option>';
+        batchSelect.disabled = true;
+
+        fetch('/adjustments/get-batches/' + medicineId)
+            .then(response => response.text())
+            .then(html => {
+                batchSelect.innerHTML = html;
+                batchSelect.disabled = false;
+            })
+            .catch(error => {
+                batchSelect.innerHTML = '<option value="">Error loading batches</option>';
+            });
+    });
+
+    // Auto-fill reason from dropdown
+    document.getElementById('waste_reason_select').addEventListener('change', function() {
+        if (this.value) {
+            document.getElementById('reason').value = this.value;
+        }
+    });
+</script>
+{% endblock %}

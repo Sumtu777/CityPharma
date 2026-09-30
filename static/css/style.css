@@ -1,0 +1,49 @@
+/* ============================================
+   CityPharma Custom Styles
+   This file contains our custom styling that
+   supplements Bootstrap's default styles.
+   ============================================ */
+
+/* Make the body fill the full height and push footer to bottom */
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1;
+}
+
+/* Card hover effect - subtle lift when user hovers over dashboard cards */
+.card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* Make the navbar brand slightly larger */
+.navbar-brand {
+    font-size: 1.3rem;
+    font-weight: 600;
+}
+
+/* Style for the role badge in the navbar */
+.navbar .badge {
+    font-size: 0.7rem;
+    vertical-align: middle;
+}
+
+/* Improve table readability */
+.table th {
+    white-space: nowrap;
+}
+
+/* Style for form cards */
+.form-card {
+    max-width: 800px;
+    margin: 0 auto;
+}
