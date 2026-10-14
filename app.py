@@ -2,24 +2,36 @@
 # app.py - Main Application File for CityPharma
 # ============================================
 
+import os
+import secrets
+
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
+from dotenv import load_dotenv
 import mysql.connector
+
+# --- Load settings from a local .env file (never committed) ---
+# Copy .env.example to .env and fill in your own values.
+load_dotenv()
 
 # --- Create Flask App ---
 app = Flask(__name__)
-app.secret_key = 'citypharma_secret_key_2026'
+
+# The secret key signs session cookies, so it must not live in the code.
+# If none is set, a random one is generated (sessions then reset on restart).
+app.secret_key = os.environ.get('SECRET_KEY') or secrets.token_hex(32)
 
 # ============================================
 # DATABASE CONNECTION
 # ============================================
 def get_db_connection():
     connection = mysql.connector.connect(
-        host='localhost',
-        user='root',
-        password='',
-        database='citypharma_db'
+        host=os.environ.get('DB_HOST', 'localhost'),
+        port=int(os.environ.get('DB_PORT', '3306')),
+        user=os.environ.get('DB_USER', 'root'),
+        password=os.environ.get('DB_PASSWORD', ''),
+        database=os.environ.get('DB_NAME', 'citypharma_db')
     )
     return connection
 
@@ -350,4 +362,6 @@ app.register_blueprint(users_bp)
 # ============================================
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    # Debug mode shows code and an interactive console on errors,
+    # so it is off unless FLASK_DEBUG=1 is set for local development.
+    app.run(debug=os.environ.get('FLASK_DEBUG') == '1')
